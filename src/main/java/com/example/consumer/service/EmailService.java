@@ -14,17 +14,19 @@ public class EmailService {
     @Autowired
     private JavaMailSender javaMailSender;
 
-    public void sendEmail(NotificationDTO notificationRequestDto) {
+    public boolean sendEmail(NotificationDTO notificationRequestDto) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper;
         try {
             helper = new MimeMessageHelper(mimeMessage, true);
             helper.setTo(notificationRequestDto.getEmail());
             helper.setSubject("Subject of the Email");
-            helper.setText("Body of the Email", true); 
+            helper.setText("Body of the Email", true);
             javaMailSender.send(mimeMessage);
+            return true;
         } catch (MessagingException e) {
             e.printStackTrace();
         }
+        return false;
     }
 }
