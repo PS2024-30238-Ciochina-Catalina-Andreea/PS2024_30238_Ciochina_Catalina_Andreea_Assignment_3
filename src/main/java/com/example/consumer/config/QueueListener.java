@@ -1,8 +1,11 @@
 package com.example.consumer.config;
+
 import com.example.consumer.dto.notification.NotificationDTO;
 import com.example.consumer.service.EmailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,14 +19,10 @@ public class QueueListener {
 
     private final static String QUEUE_NAME = "email_queue";
 
-    private final EmailService emailService;
-    private final ObjectMapper objectMapper;
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueueListener.class);
 
     @Autowired
-    public QueueListener(EmailService emailService, ObjectMapper objectMapper) {
-        this.emailService = emailService;
-        this.objectMapper = objectMapper;
-    }
+    private EmailService emailService;
 
     public void startListening() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -36,24 +35,28 @@ public class QueueListener {
                 Channel channel = connection.createChannel();
 
                 channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-                System.out.println("Așteptam mesaje...");
+                LOGGER.info("Astept mesaje...");
 
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                     String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                    System.out.println("Am primit mesajul: '" + message + "'");
+                    LOGGER.info("Am primit: '" + message + "'");
 
                     try {
+                        ObjectMapper objectMapper = new ObjectMapper();
                         NotificationDTO notificationDto = objectMapper.readValue(message, NotificationDTO.class);
+                        if(emailService == null){
+                            this.emailService = new EmailService();
+                        }
                         emailService.sendEmail(notificationDto);
                     } catch (IOException e) {
-                        System.err.println("Eroare la deserializarea mesajului: " + e.getMessage());
+                        LOGGER.error("Eroare la deserializarea mesajului: " + e.getMessage());
                     }
                 };
 
                 channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {
                 });
             } catch (Exception e) {
-                System.err.println("Eroare la conectarea la RabbitMQ sau la crearea canalului: " + e.getMessage());
+                LOGGER.error("Eroare la conectarea la RabbitMQ sau la crearea canalului: " + e.getMessage());
             }
         });
     }
