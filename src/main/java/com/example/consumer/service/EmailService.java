@@ -64,21 +64,24 @@ public class EmailService {
         MimeMessage message = javaMailSender.createMimeMessage();
 
         try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setTo(invoiceDTO.getEmail());
-            helper.setSubject("Invoice");
+            if (this.emailValidator.isValidPayloadForInvoice(invoiceDTO)) {
+                MimeMessageHelper helper = new MimeMessageHelper(message, true);
+                helper.setTo(invoiceDTO.getEmail());
+                helper.setSubject("Invoice");
 
-            String htmlBody = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/invoiceSent.html")));
-            setEmailTemplate(helper, htmlBody);
+                String htmlBody = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/invoiceSent.html")));
+                setEmailTemplate(helper, htmlBody);
 
-            OutputStream out = new FileOutputStream("invoice_user.pdf");
-            out.write(invoiceDTO.getBody());
-            out.close();
-            DataSource pdf = new FileDataSource("invoice_user.pdf");
-            helper.addAttachment("invoice_user.pdf", pdf);
-
-            javaMailSender.send(message);
-
+                OutputStream out = new FileOutputStream("invoice_user.pdf");
+                out.write(invoiceDTO.getBody());
+                out.close();
+                DataSource pdf = new FileDataSource("invoice_user.pdf");
+                helper.addAttachment("invoice_user.pdf", pdf);
+                javaMailSender.send(message);
+                LOGGER.info("Email-ul a fost trimit catre {}", invoiceDTO.getEmail());
+            } else {
+                LOGGER.error("Payload-ul nu este valid");
+            }
         } catch (MessagingException | IOException e) {
             e.printStackTrace();
         }
