@@ -1,19 +1,25 @@
 package com.example.consumer.service;
 
+import com.example.consumer.dto.notification.InvoiceDTO;
 import com.example.consumer.dto.notification.NotificationDTO;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.*;
 import jakarta.activation.DataSource;
 import jakarta.activation.FileDataSource;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -56,6 +62,24 @@ public class EmailService {
         return false;
     }
 
+    public void sendEmailWithPdf(InvoiceDTO invoiceDTO) {
+        MimeMessage message = javaMailSender.createMimeMessage();
 
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(invoiceDTO.getEmail());
+            helper.setSubject("Factura");
+            helper.setText("Va multumim pentru comanda! Va trimitem alaturat factura in format PDF:");
 
+            OutputStream out = new FileOutputStream("invoice_user.pdf");
+            out.write(invoiceDTO.getBody());
+            out.close();
+            DataSource pdf = new FileDataSource("invoice_user.pdf");
+            helper.addAttachment("invoice_user.pdf",pdf);
+
+            javaMailSender.send(message);
+        } catch (MessagingException | IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

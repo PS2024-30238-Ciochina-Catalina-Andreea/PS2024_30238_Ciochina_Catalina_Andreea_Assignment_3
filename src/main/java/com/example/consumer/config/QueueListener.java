@@ -1,5 +1,6 @@
 package com.example.consumer.config;
 
+import com.example.consumer.dto.notification.InvoiceDTO;
 import com.example.consumer.dto.notification.NotificationDTO;
 import com.example.consumer.service.EmailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,11 +44,11 @@ public class QueueListener {
 
                     try {
                         ObjectMapper objectMapper = new ObjectMapper();
-                        NotificationDTO notificationDto = objectMapper.readValue(message, NotificationDTO.class);
+                        InvoiceDTO invoiceDTO = objectMapper.readValue(message, InvoiceDTO.class);
                         if(emailService == null){
                             this.emailService = new EmailService();
                         }
-                        emailService.sendEmail(notificationDto);
+                        emailService.sendEmailWithPdf(invoiceDTO);
                     } catch (IOException e) {
                         LOGGER.error("Eroare la deserializarea mesajului: " + e.getMessage());
                     }
