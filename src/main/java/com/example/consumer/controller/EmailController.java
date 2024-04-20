@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class EmailController {
 
     private final EmailService emailService;
+
     private final EmailValidator emailValidator;
 
     public EmailController(EmailService emailService, EmailValidator emailValidator) {

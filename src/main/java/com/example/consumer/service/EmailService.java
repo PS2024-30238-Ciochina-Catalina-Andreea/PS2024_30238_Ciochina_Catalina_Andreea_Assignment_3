@@ -2,6 +2,7 @@ package com.example.consumer.service;
 
 import com.example.consumer.dto.notification.InvoiceDTO;
 import com.example.consumer.dto.notification.NotificationDTO;
+import com.example.consumer.validators.EmailValidator;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.*;
@@ -28,11 +29,14 @@ public class EmailService {
 
     private final JavaMailSender javaMailSender;
 
-    public EmailService(JavaMailSender javaMailSender) {
-        this.javaMailSender = javaMailSender;
-    }
+    private final EmailValidator emailValidator;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
+
+    public EmailService(JavaMailSender javaMailSender, EmailValidator emailValidator) {
+        this.javaMailSender = javaMailSender;
+        this.emailValidator = emailValidator;
+    }
 
     public boolean sendEmail(NotificationDTO notificationRequestDto) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
@@ -44,13 +48,7 @@ public class EmailService {
 
             String htmlBody = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/accountCreated.html")));
 
-            helper.setText(htmlBody, true);
-            DataSource cornerImg = new FileDataSource("src/main/resources/templates/corner.png");
-            helper.addInline("corner", cornerImg);
-            DataSource cornerRightImg = new FileDataSource("src/main/resources/templates/corner-right.png");
-            helper.addInline("corner-right", cornerRightImg);
-            DataSource bouquet = new FileDataSource("src/main/resources/templates/bouquet1.png");
-            helper.addInline("bouquet1", bouquet);
+            setEmailTemplate(helper, htmlBody);
 
             javaMailSender.send(mimeMessage);
             return true;
@@ -68,8 +66,10 @@ public class EmailService {
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(invoiceDTO.getEmail());
-            helper.setSubject("Factura");
-            helper.setText("Va multumim pentru comanda! Va trimitem alaturat factura in format PDF:");
+            helper.setSubject("Invoice");
+
+            String htmlBody = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/invoiceSent.html")));
+            setEmailTemplate(helper, htmlBody);
 
             OutputStream out = new FileOutputStream("invoice_user.pdf");
             out.write(invoiceDTO.getBody());
@@ -82,5 +82,15 @@ public class EmailService {
         } catch (MessagingException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void setEmailTemplate(MimeMessageHelper helper, String htmlBody) throws MessagingException {
+        helper.setText(htmlBody, true);
+        DataSource cornerImg = new FileDataSource("src/main/resources/templates/corner.png");
+        helper.addInline("corner", cornerImg);
+        DataSource cornerRightImg = new FileDataSource("src/main/resources/templates/corner-right.png");
+        helper.addInline("corner-right", cornerRightImg);
+        DataSource bouquet = new FileDataSource("src/main/resources/templates/bouquet1.png");
+        helper.addInline("bouquet1", bouquet);
     }
 }

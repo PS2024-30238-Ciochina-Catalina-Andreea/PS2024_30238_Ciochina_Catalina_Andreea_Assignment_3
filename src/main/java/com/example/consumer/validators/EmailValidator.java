@@ -1,5 +1,6 @@
 package com.example.consumer.validators;
 
+import com.example.consumer.dto.notification.InvoiceDTO;
 import com.example.consumer.dto.notification.NotificationDTO;
 import org.springframework.stereotype.Component;
 
@@ -19,5 +20,12 @@ public class EmailValidator {
                 && requestDto.getEmail() != null
                 && requestDto.getBodyAction() != null
                 && requestDto.getBody() != null;
+    }
+
+    public boolean isValidPayloadForInvoice(InvoiceDTO invoiceDTO) {
+        return invoiceDTO != null
+                && invoiceDTO.getId() != null
+                && invoiceDTO.getEmail() != null
+                && invoiceDTO.getBody() != null;
     }
 }
