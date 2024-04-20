@@ -26,15 +26,15 @@ import java.nio.file.Paths;
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender javaMailSender;
+    private final JavaMailSender javaMailSender;
+
+    public EmailService(JavaMailSender javaMailSender) {
+        this.javaMailSender = javaMailSender;
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
 
     public boolean sendEmail(NotificationDTO notificationRequestDto) {
-        if (javaMailSender == null) {
-            this.javaMailSender = new JavaMailSenderImpl();
-        }
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper;
         try {
@@ -75,9 +75,10 @@ public class EmailService {
             out.write(invoiceDTO.getBody());
             out.close();
             DataSource pdf = new FileDataSource("invoice_user.pdf");
-            helper.addAttachment("invoice_user.pdf",pdf);
+            helper.addAttachment("invoice_user.pdf", pdf);
 
             javaMailSender.send(message);
+
         } catch (MessagingException | IOException e) {
             e.printStackTrace();
         }

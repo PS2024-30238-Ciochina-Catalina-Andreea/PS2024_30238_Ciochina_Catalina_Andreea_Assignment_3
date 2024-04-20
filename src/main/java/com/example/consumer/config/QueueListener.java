@@ -22,8 +22,11 @@ public class QueueListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueueListener.class);
 
-    @Autowired
-    private EmailService emailService;
+    private final EmailService emailService;
+
+    public QueueListener(EmailService emailService){
+        this.emailService = emailService;
+    }
 
     public void startListening() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -45,9 +48,6 @@ public class QueueListener {
                     try {
                         ObjectMapper objectMapper = new ObjectMapper();
                         InvoiceDTO invoiceDTO = objectMapper.readValue(message, InvoiceDTO.class);
-                        if(emailService == null){
-                            this.emailService = new EmailService();
-                        }
                         emailService.sendEmailWithPdf(invoiceDTO);
                     } catch (IOException e) {
                         LOGGER.error("Eroare la deserializarea mesajului: " + e.getMessage());
