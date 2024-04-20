@@ -26,17 +26,17 @@ public class EmailController {
     public ResponseEntity<MessageDTO> sendEmail(@RequestHeader("Authorization") String authorizationHeader,
                                                 @RequestBody NotificationDTO requestDto) {
 
-        if (!emailValidator.isValidAuthorizationToken(authorizationHeader)) {
+        if (!emailValidator.isValidAuthorizationToken(authorizationHeader, requestDto.getId())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         if (!emailValidator.isValidPayload(requestDto)) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
         boolean emailSent = emailService.sendEmail(requestDto);
         if (emailSent) {
-            return ResponseEntity.ok(new MessageDTO("Mail trimis"));
+            return ResponseEntity.ok(new MessageDTO("Mail trimis catre " + requestDto.getEmail()));
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

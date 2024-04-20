@@ -13,4 +13,6 @@ public class NotificationDTO {
     private UUID id;
     private String name;
     private String email;
+    private String bodyAction;
+    private String body;
 }
