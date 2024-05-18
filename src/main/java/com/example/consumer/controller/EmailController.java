@@ -4,12 +4,13 @@ import com.example.consumer.dto.notification.MessageDTO;
 import com.example.consumer.dto.notification.NotificationDTO;
 import com.example.consumer.service.EmailService;
 import com.example.consumer.validators.EmailValidator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 public class EmailController {
@@ -42,4 +43,31 @@ public class EmailController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @PostMapping("/send-email/report")
+    public ResponseEntity<String> handleFileUpload(@RequestHeader("Authorization") String authorizationHeader,
+                                                   @RequestParam("requestDto") String requestDtoStr,
+                                                   @RequestParam("file") MultipartFile file) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        NotificationDTO requestDto;
+        try {
+            requestDto = objectMapper.readValue(requestDtoStr, NotificationDTO.class);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid requestDto format.");
+        }
+
+        if (!emailValidator.isValidAuthorizationToken(authorizationHeader, requestDto.getId())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!emailValidator.isValidPayload(requestDto)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Fisierul nu poate fi gol.");
+        }
+        this.emailService.saveFileAndSendEmail(file, requestDto);
+        return ResponseEntity.ok("Fisierul a fost incarcat si trimis cu succes catre " + requestDto.getEmail());
+    }
+
 }
