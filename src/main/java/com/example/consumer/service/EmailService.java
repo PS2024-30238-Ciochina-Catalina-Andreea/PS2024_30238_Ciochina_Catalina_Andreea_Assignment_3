@@ -98,7 +98,7 @@ public class EmailService {
             this.saveFile(file);
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(requestDto.getEmail());
-            helper.setSubject("Raport vanzari");
+            helper.setSubject("Raport");
             String htmlBody = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/reportSent.html")));
             setEmailTemplate(helper, htmlBody);
             String fileName = file.getOriginalFilename();
